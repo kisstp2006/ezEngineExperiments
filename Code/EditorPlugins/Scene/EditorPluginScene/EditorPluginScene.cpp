@@ -31,6 +31,7 @@
 #include <GuiFoundation/PropertyGrid/Implementation/PropertyWidget.moc.h>
 #include <GuiFoundation/PropertyGrid/PropertyMetaState.h>
 #include <GuiFoundation/UIServices/DynamicStringEnum.h>
+#include <RendererCore/Components/SplineComponent.h>
 #include <RendererCore/Lights/BoxReflectionProbeComponent.h>
 #include <RendererCore/Lights/PointLightComponent.h>
 #include <RendererCore/Lights/SpotLightComponent.h>
@@ -113,6 +114,7 @@ void ezLightComponent_PropertyMetaStateEventHandler(ezPropertyMetaStateEvent& e)
 void ezSceneDocument_PropertyMetaStateEventHandler(ezPropertyMetaStateEvent& e);
 void ezAreaDamageComponent_PropertyMetaStateEventHandler(ezPropertyMetaStateEvent& e);
 void ezProjectileSurfaceInteraction_PropertyMetaStateEventHandler(ezPropertyMetaStateEvent& e);
+void ezSplineNodeComponent_PropertyMetaStateEventHandler(ezPropertyMetaStateEvent& e);
 
 QImage SliderImageGenerator_LightTemperature(ezUInt32 uiWidth, ezUInt32 uiHeight, double fMinValue, double fMaxValue)
 {
@@ -232,6 +234,7 @@ void OnLoadPlugin()
   ezPropertyMetaState::GetSingleton()->m_Events.AddEventHandler(ezLightComponent_PropertyMetaStateEventHandler);
   ezPropertyMetaState::GetSingleton()->m_Events.AddEventHandler(ezAreaDamageComponent_PropertyMetaStateEventHandler);
   ezPropertyMetaState::GetSingleton()->m_Events.AddEventHandler(ezProjectileSurfaceInteraction_PropertyMetaStateEventHandler);
+  ezPropertyMetaState::GetSingleton()->m_Events.AddEventHandler(ezSplineNodeComponent_PropertyMetaStateEventHandler);
 }
 
 void OnUnloadPlugin()
@@ -429,4 +432,19 @@ void ezProjectileSurfaceInteraction_PropertyMetaStateEventHandler(ezPropertyMeta
   {
     props["Impulse"].m_Visibility = ezPropertyUiState::Invisible;
   }
+}
+
+void ezSplineNodeComponent_PropertyMetaStateEventHandler(ezPropertyMetaStateEvent& e)
+{
+  static const ezRTTI* pRtti = ezRTTI::FindTypeByName("ezSplineNodeComponent");
+
+  if (e.m_pObject->GetTypeAccessor().GetType() != pRtti)
+    return;
+
+  const ezInt32 iTangentModeIn = e.m_pObject->GetTypeAccessor().GetValue("TangentModeIn").ConvertTo<ezInt32>();
+  const ezInt32 iTangentModeOut = e.m_pObject->GetTypeAccessor().GetValue("TangentModeOut").ConvertTo<ezInt32>();
+
+  auto& props = *e.m_pPropertyStates;
+  props["CustomTangentIn"].m_Visibility = iTangentModeIn == ezSplineTangentMode::Custom ? ezPropertyUiState::Default : ezPropertyUiState::Invisible;
+  props["CustomTangentOut"].m_Visibility = iTangentModeOut == ezSplineTangentMode::Custom ? ezPropertyUiState::Default : ezPropertyUiState::Invisible;
 }
